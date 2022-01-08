@@ -1,5 +1,6 @@
 from collections import defaultdict, namedtuple
 import statistics
+import time
 
 LetterCount = namedtuple("LetterCount", ["char", "count", "exact"])
 
@@ -67,8 +68,13 @@ class WordleLibrary(object):
         return ((word, score_word(letter_counts, word)) for word in self.valid_words)
 
     def suggest_words(self, count):
+        start = time.time()
         scored_words = self._suggest_significant_words()
-        return sorted(scored_words, key=lambda pair: pair[1], reverse=True)[:count]
+        result = sorted(scored_words, key=lambda pair: pair[1], reverse=True)[:count]
+
+        end = time.time()
+        print(f"Calculating suggested words took {end - start} seconds")
+        return result
 
 
 class SignificanceScorer(object):
