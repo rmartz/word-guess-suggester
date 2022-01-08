@@ -12,7 +12,7 @@ parser.add_argument('--letters', type=int, default='5',
 parser.add_argument('--guesses', type=int, default='6',
                     help='Number of guesses allowed')
 parser.add_argument('--simulate', action='store_true',
-                    help='Engage simulation mode for testing')
+                    help="Select a secret goal word internally and simulate Wordle's responses")
 
 
 args = parser.parse_args()
