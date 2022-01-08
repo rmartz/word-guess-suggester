@@ -19,10 +19,11 @@ args = parser.parse_args()
 
 library = WordleLibrary()
 
+word_re = r"^[a-zA-Z]+$"
 
 with open(args.corpus) as fp:
     all_words = (line.strip() for line in fp)
-    wordle_words = (line.lower() for line in all_words if len(line) == args.letters and "'" not in line)
+    wordle_words = (line.lower() for line in all_words if len(line) == args.letters and re.match(word_re, line))
     for word in wordle_words:
         library.add_word(word)
 
