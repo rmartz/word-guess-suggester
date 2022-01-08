@@ -47,11 +47,11 @@ def apply_feedback(word_list, guess, feedback):
 
 class WordleLibrary(object):
     valid_words: "list[str]" = list()
-    guessable_words: "list[str]" = list()
+    all_words: "list[str]" = list()
 
-    def add_word(self, word: str):
-        self.valid_words.append(word)
-        self.guessable_words.append(word)
+    def __init__(self, word_list):
+        self.valid_words = list(word_list)
+        self.all_words = list(self.valid_words)
 
     def add_feedback(self, word: str, feedback: str):
         print(f"Applying feedback with word {word} and feedback {feedback}")
@@ -66,37 +66,36 @@ class WordleLibrary(object):
         if remaining_count == 0:
             raise Exception("No valid guesses remain")
 
-    def _suggest_significant_words(self):
+    def _suggest_significant_words(self, valid_only=True):
         sampled_goals = cap_complexity(self.valid_words, 1000)
-        sampled_guesses = cap_complexity(self.guessable_words, 10000)
-
         scorer = SignificanceScorer(sampled_goals)
+
+        if valid_only:
+            guesses = self.valid_words
+        else:
+            guesses = self.all_words
+
+        sampled_guesses = cap_complexity(guesses, 10000)
         return ((word, scorer.score(word)) for word in sampled_guesses)
-
-    def _suggest_likely_words(self):
-        def _score_word(scores, word):
-            return sum(scores[char] for char in set(word))
-
-        letter_counts = defaultdict(int)
-        for word in self.valid_words:
-            for char in set(word):
-                letter_counts[char] += 1
-
-        return ((word, _score_word(letter_counts, word)) for word in self.valid_words)
 
     def suggest_words(self, count):
         start = time.time()
-        if len(self.valid_words) > count:
-            scored_words = self._suggest_significant_words()
-        else:
-            scored_words = self._suggest_likely_words()
+        scored_words = self._suggest_significant_words(
+            valid_only=(count >= len(self.valid_words)
+        ))
         result = sorted(scored_words, key=lambda pair: pair[1], reverse=True)[:count]
 
         end = time.time()
         print(f"Calculating suggested words took {end - start} seconds")
         return result
 
+    def random_word(self):
+        return random.choice(self.all_words)
 
+
+# SignificanceScorer calculates the impact a word is expected to have finding an unknown goal.
+# For every possible goal it simulates what feedback that word could receive and how many
+# possibilities that feedback would help eliminate, and scores the word on the median outcome.
 class SignificanceScorer(object):
     possible_words: "set[str]" = None
 

@@ -17,25 +17,26 @@ parser.add_argument('--simulate', action='store_true',
 
 args = parser.parse_args()
 
-library = WordleLibrary()
+def library_from_path(path):
+    word_re = r"^[a-zA-Z]+$"
+    with open(path) as fp:
+        all_words = (line.strip() for line in fp)
+        wordle_words = [line.lower() for line in all_words if len(line) == args.letters and re.match(word_re, line)]
+    print(f"Using dictionary of {len(wordle_words)} words")
+    return WordleLibrary(wordle_words)
 
-word_re = r"^[a-zA-Z]+$"
 
-with open(args.corpus) as fp:
-    all_words = (line.strip() for line in fp)
-    wordle_words = (line.lower() for line in all_words if len(line) == args.letters and re.match(word_re, line))
-    for word in wordle_words:
-        library.add_word(word)
-
-print(f"Using dictionary of {len(library.valid_words)} words")
-
+library = library_from_path(args.corpus)
 if args.simulate:
-    secret = random.choice(library.valid_words)
+    secret = library.random_word()
 
-for _ in range(args.guesses):
+for guess in range(1, args.guesses + 1):
+    print(f"Guess {guess}!")
+    print("Getting suggestions...")
+    suggestions = library.suggest_words(5)
     print("The top suggested words are:")
-    for suggestion, score in library.suggest_words(5):
-        print(f"- {suggestion} ({score})")
+    for suggestion, _ in suggestions:
+        print(f"- {suggestion}")
 
     while True:
         print("What word did you use?")
@@ -48,9 +49,6 @@ for _ in range(args.guesses):
     if args.simulate:
         feedback = simulate_feedback(secret, word)
         print(f"Your simulated feedback is {feedback}")
-        if feedback == 'G' * args.letters:
-            print("You win!")
-            break
     else:
         while True:
             print("What was Wordle's feedback? [Y = Yellow, G = Green, N = None]")
@@ -59,5 +57,12 @@ for _ in range(args.guesses):
                 break
             else:
                 print("That doesn't look right... please use one of YGN for each letter")
+
+    if feedback == 'G' * args.letters:
+        print(f"You won in {guess} guesses!")
+        break
+    else:
+        print("")
+
 
     library.add_feedback(word, feedback)
