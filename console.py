@@ -33,8 +33,8 @@ if args.simulate:
 
 for _ in range(args.guesses):
     print("The top suggested words are:")
-    for suggestion, _ in library.suggest_words(5):
-        print(f"- {suggestion}")
+    for suggestion, score in library.suggest_words(5):
+        print(f"- {suggestion} ({score})")
 
     while True:
         print("What word did you use?")
@@ -47,6 +47,9 @@ for _ in range(args.guesses):
     if args.simulate:
         feedback = simulate_feedback(secret, word)
         print(f"Your simulated feedback is {feedback}")
+        if feedback == 'G' * args.letters:
+            print("You win!")
+            break
     else:
         while True:
             print("What was Wordle's feedback? [Y = Yellow, G = Green, N = None]")
