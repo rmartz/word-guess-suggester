@@ -61,8 +61,6 @@ for guess in range(1, args.guesses + 1):
     if feedback == 'G' * args.letters:
         print(f"You won in {guess} guesses!")
         break
-    else:
-        print("")
-
 
     library.add_feedback(word, feedback)
+    print("")
