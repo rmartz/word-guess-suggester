@@ -1,7 +1,5 @@
-from collections import defaultdict, namedtuple
-from functools import lru_cache
+from collections import namedtuple
 import statistics
-import time
 import random
 
 LetterCount = namedtuple("LetterCount", ["char", "count", "exact"])
@@ -45,7 +43,7 @@ def apply_feedback(word_list, guess, feedback):
         it = _apply_filter_step(it, pos, char, letter_feedback)
     return it
 
-class WordleLibrary(object):
+class WordSuggester(object):
     valid_words: "list[str]" = list()
     all_words: "list[str]" = list()
 
@@ -79,15 +77,10 @@ class WordleLibrary(object):
         return ((word, scorer.score(word)) for word in sampled_guesses)
 
     def suggest_words(self, count):
-        start = time.time()
         scored_words = self._suggest_significant_words(
             valid_only=(count >= len(self.valid_words)
         ))
-        result = sorted(scored_words, key=lambda pair: pair[1], reverse=True)[:count]
-
-        end = time.time()
-        print(f"Calculating suggested words took {end - start} seconds")
-        return result
+        return sorted(scored_words, key=lambda pair: pair[1], reverse=True)[:count]
 
     def random_word(self):
         return random.choice(self.all_words)
