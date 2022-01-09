@@ -82,8 +82,16 @@ class WordSuggester(object):
         ))
         return sorted(scored_words, key=lambda pair: pair[1], reverse=True)[:count]
 
+    def suggest_word(self):
+        scored_words = self._suggest_significant_words()
+        return max(scored_words, key=lambda pair: pair[1])
+
     def random_word(self):
         return random.choice(self.all_words)
+
+    def reset(self):
+        self.valid_words = list(self.all_words)
+
 
 
 # SignificanceScorer calculates the impact a word is expected to have finding an unknown goal.
