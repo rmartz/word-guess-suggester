@@ -26,7 +26,12 @@ for guess in range(1, args.guesses + 1):
     print("")
     print(f"Guess {guess}!")
 
-    suggestions = get_suggestions(library, 5, valid_only=args.hard_mode)
+    # Force the algorithm to only provide valid guesses if we are in hard mode (Where all clues must
+    # be used in subsequent guesses) or are on the last guess and an invalid guess guarantees loss.
+    last_guess = (guess == args.guesses)
+    valid_only = args.hard_mode or last_guess
+
+    suggestions = get_suggestions(library, 5, valid_only=valid_only)
     print("The top suggested words are:")
     for suggestion, _ in suggestions:
         print(f"- {suggestion}")

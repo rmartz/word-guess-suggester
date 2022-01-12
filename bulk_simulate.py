@@ -30,11 +30,11 @@ losing_words = list()
 
 # All games start with the same state, and so the same initial guess.
 # Since it is dramatically the slowest guess to compute, we can compute it once and store it.
-first_guess = None
+fixed_first_suggestion = None
 if args.starting_word:
-    first_guess = args.starting_word
+    fixed_first_suggestion = args.starting_word
 elif not args.secret:
-    first_guess, _ = library.suggest_word()
+    fixed_first_suggestion, _ = library.suggest_word()
 
 for game in range(1, args.games + 1):
     library.reset()
@@ -47,10 +47,15 @@ for game in range(1, args.games + 1):
     print("")
     print(f"Game {game}")
     for guess in range(1, args.guesses + 1):
-        if guess == 1 and first_guess:
-            suggestion = first_guess
+        first_guess = (guess == 1)
+
+        # Only use valid guesses on the last guess when an invalid guess means we guaranteed lose.
+        last_guess = (guess == args.guesses)
+
+        if first_guess and fixed_first_suggestion:
+            suggestion = fixed_first_suggestion
         else:
-            suggestion, _ = library.suggest_word()
+            suggestion, _ = library.suggest_word(valid_only=last_guess)
         if suggestion == secret:
             print(f"Success in {guess} attempts")
             success_count += 1

@@ -76,6 +76,12 @@ class WordSuggester(object):
             raise Exception("No valid guesses remain")
 
     def _suggest_significant_words(self, valid_only=True):
+        if not valid_only:
+            # Only suggest valid answers once we're down to 3 or fewer possible solutions.
+            # At 3 options we are guaranteed success in 2 guesses - forcing a valid
+            # guess means we also have a chance it is correct and we can win in 1
+            valid_only = (len(self.valid_words) <= 3)
+
         sampled_goals = sample_items(self.valid_words, self.max_goal_samples)
         scorer = SignificanceScorer(sampled_goals)
 
@@ -88,17 +94,12 @@ class WordSuggester(object):
         return ((word, scorer.score(word)) for word in sampled_guesses)
 
     def suggest_words(self, count, valid_only=None):
-        if not valid_only:
-            # Only suggest valid answers once the number of suggestions we're looking for covers all
-            # possible answers anyway
-            valid_only = (count >= len(self.valid_words))
         scored_words = self._suggest_significant_words(
             valid_only=valid_only
         )
         return sorted(scored_words, key=lambda pair: pair[1], reverse=True)[:count]
 
-    def suggest_word(self):
-        valid_only = (len(self.valid_words) == 1)
+    def suggest_word(self, valid_only=None):
         scored_words = self._suggest_significant_words(valid_only=valid_only)
         return max(scored_words, key=lambda pair: pair[1])
 
