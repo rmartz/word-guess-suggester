@@ -15,10 +15,14 @@ parser.add_argument('--games', type=int, default=10,
                     help="Number of games to simulate")
 parser.add_argument('--starting-word', type=str, default=None,
                     help="Word to use as first guess in games")
+parser.add_argument('--secret', type=str, default=None,
+                    help="Word to use for the goal to guess")
+parser.add_argument('--complexity', type=int, default=5,
+                    help="Control how many goal/guess combinations are evaluated in scoring suggestions")
 
 args = parser.parse_args()
 
-library = library_from_path(args.corpus, args.letters)
+library = library_from_path(args.corpus, args.letters, args.complexity)
 
 success_count = 0
 guess_counts = list()
@@ -26,20 +30,24 @@ losing_words = list()
 
 # All games start with the same state, and so the same initial guess.
 # Since it is dramatically the slowest guess to compute, we can compute it once and store it.
+first_guess = None
 if args.starting_word:
     first_guess = args.starting_word
-else:
+elif not args.secret:
     first_guess, _ = library.suggest_word()
 
 for game in range(1, args.games + 1):
     library.reset()
 
-    secret = library.random_word()
+    if args.secret:
+        secret = args.secret
+    else:
+        secret = library.random_word()
 
     print("")
     print(f"Game {game}")
     for guess in range(1, args.guesses + 1):
-        if guess == 1:
+        if guess == 1 and first_guess:
             suggestion = first_guess
         else:
             suggestion, _ = library.suggest_word()
@@ -59,9 +67,14 @@ print(f"{success_count} successes in {args.games} games")
 success_percent = 100.0 * success_count / args.games
 print(f"({success_percent:.2f}% success)")
 if losing_words:
+    losing_word_counts = Counter(losing_words).items()
+    sorted_losing_word_counts = sorted(losing_word_counts, key=lambda pair: pair[0])
     print("Words that were not guessed successfully:")
-    for word in losing_words:
-        print(f"- {word}")
+    for word, count in sorted_losing_word_counts:
+        if count == 1:
+            print(f"- {word}")
+        else:
+            print(f"- {word} ({count}x)")
 
 mean_guesses = statistics.mean(guess_counts)
 print(f"Mean guesses to win: {mean_guesses}")
